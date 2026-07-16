@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <string.h>
+
+#define SOF 'S'
+#define EOF_CHAR 'F'
+#define ESC 'E'
+
+int main()
+{
+    char data[100], stuffed[200], received[200], recovered[100];
+    int i, j = 0, k = 0;
+
+    printf("Enter the data: ");
+    scanf("%s", data);
+
+    // Byte Stuffing
+    stuffed[j++] = SOF;
+
+    for(i = 0; data[i] != '\0'; i++)
+    {
+        if(data[i] == SOF || data[i] == EOF_CHAR || data[i] == ESC)
+        {
+            stuffed[j++] = ESC;
+        }
+        stuffed[j++] = data[i];
+    }
+
+    stuffed[j++] = EOF_CHAR;
+    stuffed[j] = '\0';
+
+    printf("\nOriginal Message : %s", data);
+    printf("\nStuffed Frame    : %s", stuffed);
+
+    // Transmission
+    strcpy(received, stuffed);
+
+    printf("\n\nEnter the received frame (or press same frame): ");
+    scanf("%s", received);
+
+    printf("\nReceived Frame   : %s", received);
+
+    // Check frame validity
+    if(received[0] != SOF || received[strlen(received)-1] != EOF_CHAR)
+    {
+        printf("\nFrame Error Detected!\n");
+        return 0;
+    }
+
+    // Byte De-stuffing
+    for(i = 1; i < strlen(received)-1; i++)
+    {
+        if(received[i] == ESC)
+        {
+            i++;
+        }
+        recovered[k++] = received[i];
+    }
+    recovered[k] = '\0';
+
+    printf("Recovered Data   : %s\n", recovered);
+
+    return 0;
+}
