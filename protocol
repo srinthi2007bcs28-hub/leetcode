@@ -1,0 +1,31 @@
+#include <stdio.h>
+
+int main()
+{
+    char data[100], frame[200];
+    int i, j = 0;
+
+    printf("Enter the data: ");
+    scanf("%s", data);
+
+    // Start Flag
+    frame[j++] = 'F';
+
+    // Character Stuffing
+    for(i = 0; data[i] != '\0'; i++)
+    {
+        if(data[i] == 'F' || data[i] == 'E')
+        {
+            frame[j++] = 'E';   // Insert escape character
+        }
+        frame[j++] = data[i];
+    }
+
+    // End Flag
+    frame[j++] = 'F';
+    frame[j] = '\0';
+
+    printf("\nPPP Framed Data: %s\n", frame);
+
+    return 0;
+}
