@@ -1,0 +1,83 @@
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to pair the sorted version of a string with its original index
+typedef struct {
+    char* sorted_str;
+    int original_idx;
+} WordPair;
+
+// Helper to sort characters within a single string (ascending)
+int compareChars(const void* a, const void* b) {
+    return *(const char*)a - *(const char*)b;
+}
+
+// Helper to sort WordPairs by their sorted string keys
+int comparePairs(const void* a, const void* b) {
+    return strcmp(((const WordPair*)a)->sorted_str, ((const WordPair*)b)->sorted_str);
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both the returned array and *returnColumnSizes array must be malloced.
+ */
+char*** groupAnagrams(char** strs, int strsSize, int* returnSize, int** returnColumnSizes) {
+    *returnSize = 0;
+    if (strsSize == 0 || strs == NULL) return NULL;
+
+    // Allocate memory for the pairs array
+    WordPair* pairs = (WordPair*)malloc(strsSize * sizeof(WordPair));
+    
+    // Step 1: Generate sorted key variants for each input string
+    for (int i = 0; i < strsSize; i++) {
+        int len = strlen(strs[i]);
+        pairs[i].sorted_str = (char*)malloc((len + 1) * sizeof(char));
+        strcpy(pairs[i].sorted_str, strs[i]);
+        
+        // Sort individual characters: "eat" -> "aet"
+        qsort(pairs[i].sorted_str, len, sizeof(char), compareChars);
+        pairs[i].original_idx = i;
+    }
+
+    // Step 2: Sort the pairs list based on the character-sorted string keys
+    // This clusters all anagrams cleanly next to one another
+    qsort(pairs, strsSize, sizeof(WordPair), comparePairs);
+
+    // Prepare LeetCode's multi-dimensional return arrays
+    char*** result = (char***)malloc(strsSize * sizeof(char**));
+    *returnColumnSizes = (int*)malloc(strsSize * sizeof(int));
+    int group_count = 0;
+
+    int i = 0;
+    while (i < strsSize) {
+        int j = i;
+        
+        // Count how many matching anagrams are grouped sequentially
+        while (j < strsSize && strcmp(pairs[i].sorted_str, pairs[j].sorted_str) == 0) {
+            j++;
+        }
+        
+        int current_group_size = j - i;
+        result[group_count] = (char**)malloc(current_group_size * sizeof(char*));
+        (*returnColumnSizes)[group_count] = current_group_size;
+
+        // Pop individual original strings into the current result group
+        for (int k = 0; k < current_group_size; k++) {
+            result[group_count][k] = strs[pairs[i + k].original_idx];
+        }
+
+        group_count++;
+        i = j; // Move index forward to the next unique anagram pattern
+    }
+
+    *returnSize = group_count;
+
+    // Clean up temporary keys memory
+    for (int idx = 0; idx < strsSize; idx++) {
+        free(pairs[idx].sorted_str);
+    }
+    free(pairs);
+
+    return result;
+}
