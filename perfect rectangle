@@ -1,0 +1,101 @@
+#include <stdlib.h>
+#include <stdbool.h>
+#include <limits.h>
+
+// Structure to store a single point (corner)
+typedef struct {
+    int x;
+    int y;
+} Point;
+
+// Comparison function to sort points
+int comparePoints(const void* a, const void* b) {
+    Point* p1 = (Point*)a;
+    Point* p2 = (Point*)b;
+    if (p1->x != p2->x) {
+        return p1->x - p2->x;
+    }
+    return p1->y - p2->y;
+}
+
+bool isRectangleCover(int** rectangles, int rectanglesSize, int* rectanglesColSize) {
+    if (rectanglesSize == 0) return false;
+
+    // Track the absolute bounding box boundaries
+    int min_x = INT_MAX, min_y = INT_MAX;
+    int max_x = INT_MIN, max_y = INT_MIN;
+    long long total_area = 0;
+
+    // Total points to track (4 corners per rectangle)
+    int total_points = rectanglesSize * 4;
+    Point* points = (Point*)malloc(total_points * sizeof(Point));
+    int p_idx = 0;
+
+    for (int i = 0; i < rectanglesSize; i++) {
+        int x1 = rectangles[i][0];
+        int y1 = rectangles[i][1];
+        int x2 = rectangles[i][2];
+        int y2 = rectangles[i][3];
+
+        // Update overall bounding box coordinates
+        if (x1 < min_x) min_x = x1;
+        if (y1 < min_y) min_y = y1;
+        if (x2 > max_x) max_x = x2;
+        if (y2 > max_y) max_y = y2;
+
+        // Calculate and accumulate individual areas
+        total_area += (long long)(x2 - x1) * (y2 - y1);
+
+        // Store all 4 corners of the current rectangle
+        points[p_idx++] = (Point){x1, y1};
+        points[p_idx++] = (Point){x1, y2};
+        points[p_idx++] = (Point){x2, y1};
+        points[p_idx++] = (Point){x2, y2};
+    }
+
+    // Condition 1: Verify if the cumulative area matches the bounding box area
+    long long bounding_area = (long long)(max_x - min_x) * (max_y - min_y);
+    if (total_area != bounding_area) {
+        free(points);
+        return false;
+    }
+
+    // Step 2: Sort all collected points to easily count frequencies
+    qsort(points, total_points, sizeof(Point), comparePoints);
+
+    // Count frequencies of each unique point
+    int unique_odd_count = 0;
+    int i = 0;
+    while (i < total_points) {
+        int count = 1;
+        // Count duplicate points adjacent to each other after sorting
+        while (i + 1 < total_points && points[i].x == points[i+1].x && points[i].y == points[i+1].y) {
+            count++;
+            i++;
+        }
+
+        // If a point appears an odd number of times, it must be a main outer bounding box corner
+        if (count % 2 != 0) {
+            int cx = points[i].x;
+            int cy = points[i].y;
+            
+            // Check if this odd-frequency point matches one of the 4 outer corners
+            bool is_outer_corner = ((cx == min_x && cy == min_y) || 
+                                    (cx == min_x && cy == max_y) || 
+                                    (cx == max_x && cy == min_y) || 
+                                    (cx == max_x && cy == max_y));
+            
+            if (!is_outer_corner) {
+                free(points);
+                return false; // Found an odd-count interior corner (invalid gap or overlap)
+            }
+            unique_odd_count++;
+        }
+        i++;
+    }
+
+    free(points);
+
+    // Condition 2: Exactly 4 outer corners must have odd frequencies
+    return unique_odd_count == 4;
+}
