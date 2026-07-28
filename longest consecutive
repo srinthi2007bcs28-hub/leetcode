@@ -1,0 +1,50 @@
+#include <stdlib.h>
+
+// Comparison function needed for standard qsort
+int compare(const void* a, const void* b) {
+    int num1 = *(const int*)a;
+    int num2 = *(const int*)b;
+    
+    if (num1 < num2) return -1;
+    if (num1 > num2) return 1;
+    return 0;
+}
+
+int longestConsecutive(int* nums, int numsSize) {
+    // Edge case: if array is empty, longest sequence is 0
+    if (numsSize == 0) {
+        return 0;
+    }
+
+    // Step 1: Sort the array in ascending order
+    qsort(nums, numsSize, sizeof(int), compare);
+
+    int max_streak = 1;
+    int current_streak = 1;
+
+    // Step 2: Iterate through the sorted array to find the longest sequence
+    for (int i = 1; i < numsSize; i++) {
+        // Skip duplicate numbers
+        if (nums[i] == nums[i - 1]) {
+            continue;
+        }
+        
+        // If consecutive, increment the current streak
+        if (nums[i] == nums[i - 1] + 1) {
+            current_streak++;
+        } else {
+            // Sequence broke: update max_streak and reset current_streak
+            if (current_streak > max_streak) {
+                max_streak = current_streak;
+            }
+            current_streak = 1;
+        }
+    }
+
+    // Final check in case the longest sequence ends at the last element
+    if (current_streak > max_streak) {
+        max_streak = current_streak;
+    }
+
+    return max_streak;
+}
