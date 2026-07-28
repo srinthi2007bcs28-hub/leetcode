@@ -1,0 +1,57 @@
+#include <stdlib.h>
+
+/**
+ * Definition for a Node.
+ * struct Node {
+ *     int val;
+ *     struct Node *next;
+ *     struct Node *random;
+ * };
+ */
+
+struct Node* copyRandomList(struct Node* head) {
+    if (head == NULL) {
+        return NULL;
+    }
+
+    struct Node* curr = head;
+
+    // Step 1: Create a new copied node and insert it right after its original node
+    while (curr != NULL) {
+        struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
+        new_node->val = curr->val;
+        new_node->next = curr->next;
+        new_node->random = NULL; // Will assign in the next step
+
+        curr->next = new_node;
+        curr = new_node->next;
+    }
+
+    // Step 2: Assign random pointers for the newly created nodes
+    curr = head;
+    while (curr != NULL) {
+        if (curr->random != NULL) {
+            // The new node's random pointer points to the original node's random target's copy
+            curr->next->random = curr->random->next;
+        }
+        // Move to the next original node (skip the copied node)
+        curr = curr->next->next;
+    }
+
+    // Step 3: Separate the interwoven lists back into original and copied lists
+    curr = head;
+    struct Node* new_head = head->next;
+    struct Node* copy_curr = new_head;
+
+    while (curr != NULL) {
+        curr->next = curr->next->next;
+        if (copy_curr->next != NULL) {
+            copy_curr->next = copy_curr->next->next;
+        }
+        
+        curr = curr->next;
+        copy_curr = copy_curr->next;
+    }
+
+    return new_head;
+}
