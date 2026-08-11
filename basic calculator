@@ -1,0 +1,59 @@
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+int calculate(char* s) {
+    int len = strlen(s);
+    if (len == 0) return 0;
+
+    // Allocate memory for our stack to store numbers
+    int* stack = (int*)malloc(sizeof(int) * len);
+    int top = -1;
+
+    long long current_number = 0;
+    char current_sign = '+'; // Start with a default positive sign
+
+    for (int i = 0; i < len; i++) {
+        char ch = s[i];
+
+        // 1. If it's a digit, build the full number
+        if (isdigit(ch)) {
+            current_number = current_number * 10 + (ch - '0');
+        }
+
+        // 2. If it's an operator or we reached the end of the string
+        // (Ignoring spaces)
+        if ((!isdigit(ch) && ch != ' ') || i == len - 1) {
+            if (current_sign == '+') {
+                top++;
+                stack[top] = current_number;
+            } 
+            else if (current_sign == '-') {
+                top++;
+                stack[top] = -current_number;
+            } 
+            else if (current_sign == '*') {
+                stack[top] = stack[top] * current_number; // Multiply immediately
+            } 
+            else if (current_sign == '/') {
+                stack[top] = stack[top] / current_number; // Divide immediately
+            }
+
+            // Update the sign to the current character and reset the number
+            current_sign = ch;
+            current_number = 0;
+        }
+    }
+
+    // 3. Add all the values left in the stack together
+    int final_result = 0;
+    while (top >= 0) {
+        final_result += stack[top];
+        top--;
+    }
+
+    // Clean up borrowed memory
+    free(stack);
+
+    return final_result;
+}
