@@ -1,0 +1,60 @@
+#include <stdlib.h>
+
+int sumSubarrayMins(int* arr, int arrSize) {
+    long long total_sum = 0;
+    long long MOD = 1000000007;
+    
+    // Arrays to count distances to the next smaller elements
+    int* left = (int*)malloc(sizeof(int) * arrSize);
+    int* right = (int*)malloc(sizeof(int) * arrSize);
+    
+    // Stack to store array index positions
+    int* stack = (int*)malloc(sizeof(int) * arrSize);
+    int top = -1;
+    
+    // 1. Calculate left boundaries (Previous Less Element)
+    for (int i = 0; i < arrSize; i++) {
+        // Pop elements from stack that are greater than or equal to current element
+        while (top >= 0 && arr[stack[top]] >= arr[i]) {
+            top--;
+        }
+        // If stack is empty, it means arr[i] is the smallest so far
+        left[i] = (top == -1) ? (i + 1) : (i - stack[top]);
+        
+        // Push current index to stack
+        top++;
+        stack[top] = i;
+    }
+    
+    // Reset stack for the next calculation
+    top = -1;
+    
+    // 2. Calculate right boundaries (Next Less Element)
+    for (int i = arrSize - 1; i >= 0; i--) {
+        // Pop elements from stack that are strictly greater than current element
+        // (Using strict '>' prevents duplicate counting for duplicate array numbers)
+        while (top >= 0 && arr[stack[top]] > arr[i]) {
+            top--;
+        }
+        // If stack is empty, it means arr[i] is the smallest to the end of the array
+        right[i] = (top == -1) ? (arrSize - i) : (stack[top] - i);
+        
+        // Push current index to stack
+        top++;
+        stack[top] = i;
+    }
+    
+    // 3. Multiply and calculate total sum
+    for (int i = 0; i < arrSize; i++) {
+        long long count = (long long)left[i] * right[i];
+        long long contribution = (count * arr[i]) % MOD;
+        total_sum = (total_sum + contribution) % MOD;
+    }
+    
+    // Clean up borrowed memory
+    free(left);
+    free(right);
+    free(stack);
+    
+    return (int)total_sum;
+}
