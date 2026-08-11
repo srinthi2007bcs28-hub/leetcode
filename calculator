@@ -1,0 +1,59 @@
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+int calculate(char* s) {
+    int len = strlen(s);
+    
+    // Allocate space for the stack based on the maximum string length
+    int* stack = (int*)malloc(sizeof(int) * len);
+    int top = -1;
+    
+    int result = 0;      // Stores the running total evaluation
+    int sign = 1;        // 1 means positive (+), -1 means negative (-)
+    
+    for (int i = 0; i < len; i++) {
+        char ch = s[i];
+        
+        // 1. Process multi-digit numbers
+        if (isdigit(ch)) {
+            long long num = 0;
+            while (i < len && isdigit(s[i])) {
+                num = num * 10 + (s[i] - '0');
+                i++;
+            }
+            i--; // Correct index placement after the while loop finishes
+            
+            result += num * sign;
+        }
+        // 2. Set positive sign
+        else if (ch == '+') {
+            sign = 1;
+        }
+        // 3. Set negative sign
+        else if (ch == '-') {
+            sign = -1;
+        }
+        // 4. Push context onto the stack when opening a bracket
+        else if (ch == '(') {
+            top++;
+            stack[top] = result;
+            top++;
+            stack[top] = sign;
+            
+            // Reset local states for calculations inside the parenthesis
+            result = 0;
+            sign = 1;
+        }
+        // 5. Pop context and calculate final values when closing a bracket
+        else if (ch == ')') {
+            int prev_sign = stack[top];   top--;
+            int prev_result = stack[top]; top--;
+            
+            result = prev_result + (result * prev_sign);
+        }
+    }
+    
+    free(stack);
+    return result;
+}
